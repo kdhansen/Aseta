@@ -126,18 +126,18 @@ include_directories(
 # )
 
 set_source_files_properties(
-  swig/euclidean_3d_problem.i PROPERTIES CPLUSPLUS ON 
+  swig/gatsp_wrapping.i PROPERTIES CPLUSPLUS ON 
 )
 
-SWIG_ADD_MODULE(euclidean_3d_problem python
-  swig/euclidean_3d_problem.i src/euclidean_3d_problem.cpp src/waypoint.cpp
+SWIG_ADD_MODULE(gatsp_wrapping python
+  swig/gatsp_wrapping.i src/traditional_genetic_algorithm.cpp src/genetic_algorithm_base.cpp src/euclidean_3d_problem.cpp src/waypoint.cpp
 )
-SWIG_LINK_LIBRARIES(euclidean_3d_problem ${PYTHON_LIBRARIES})
-set_target_properties(_euclidean_3d_problem
+SWIG_LINK_LIBRARIES(gatsp_wrapping ${PYTHON_LIBRARIES} ${catkin_LIBRARIES})
+set_target_properties(_gatsp_wrapping
   PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_PYTHON_DESTINATION}
 )
-add_custom_command(TARGET _euclidean_3d_problem POST_BUILD
-                   COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/euclidean_3d_problem.py ${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_PYTHON_DESTINATION}/.
+add_custom_command(TARGET _gatsp_wrapping POST_BUILD
+                   COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/gatsp_wrapping.py ${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_PYTHON_DESTINATION}/.
 )
 
 

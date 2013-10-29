@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 struct SolutionEntryBase
 {
-    SolutionEntryBase() = default;
+    SolutionEntryBase() {};
     SolutionEntryBase(size_t i) {index = i;}
 
     bool operator==(const SolutionEntryBase& rhs) const

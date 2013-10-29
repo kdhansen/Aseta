@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 class Euclidean3DProblem : public ProblemBase
 {
 public:
-    virtual SolutionBase makeSolution();
+    virtual SolutionBase makeSolution() const;
     virtual std::vector<Waypoint> route(const SolutionBase&) throw(InvalidSolution);
     virtual Waypoint firstWaypoint(const SolutionBase&) throw(InvalidSolution);
     virtual void popWaypointFront(SolutionBase&) throw(InvalidSolution);

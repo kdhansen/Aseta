@@ -30,7 +30,7 @@ public:
     ProblemBase() = default;
     virtual ~ProblemBase() = default;
 
-    virtual SolutionBase makeSolution() = 0;
+    virtual SolutionBase makeSolution() const = 0;
     virtual std::vector<Waypoint> route(const SolutionBase&) = 0;
     virtual Waypoint firstWaypoint(const SolutionBase&) = 0;
     virtual void popWaypointFront(SolutionBase&) = 0;

@@ -7,7 +7,12 @@
 		},
 		{
 			"follow_symlinks": true,
-			"path": "/home/kdh/tsplib95"
+			"path": "./src/gatsp/"
+		},
+		{
+			"follow_symlinks": true,
+			"path": "/home/kdh/tsplib95",
+			"file_exclude_patterns": ["*.gz"]
 		}
 	]
 }

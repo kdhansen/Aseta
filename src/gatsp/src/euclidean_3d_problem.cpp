@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cmath>
 #include "gatsp/euclidean_3d_problem.h"
 
-SolutionBase Euclidean3DProblem::makeSolution()
+SolutionBase Euclidean3DProblem::makeSolution() const
 {
     SolutionBase solution;
     solution.reserve(_waypoints.size());
