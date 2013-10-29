@@ -17,16 +17,21 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <algorithm>
+#include <cmath>
 #include "gatsp/traditional_genetic_algorithm.h"
+#include <iostream>
+#include <limits>
 
 TraditionalGeneticAlgorithm::TraditionalGeneticAlgorithm(
     const ProblemBase& problem,
     int num_individuals, 
     double mutate_rate, 
     double crossover_rate, 
-    unsigned int seed
+    unsigned int seed,
+    std::string statistics_file
 ) 
-    : GeneticAlgorithmBase(problem, num_individuals, mutate_rate, crossover_rate, seed)
+    : GeneticAlgorithmBase(problem, num_individuals, mutate_rate, crossover_rate, seed, statistics_file)
 {}
 
 TraditionalGeneticAlgorithm::TraditionalGeneticAlgorithm(
@@ -35,9 +40,10 @@ TraditionalGeneticAlgorithm::TraditionalGeneticAlgorithm(
     int num_individuals, 
     double mutate_rate, 
     double crossover_rate, 
-    unsigned int seed
+    unsigned int seed,
+    std::string statistics_file
 ) 
-    : GeneticAlgorithmBase(problem, solution, num_individuals, mutate_rate, crossover_rate, seed)
+    : GeneticAlgorithmBase(problem, solution, num_individuals, mutate_rate, crossover_rate, seed, statistics_file)
 {}
 
 TraditionalGeneticAlgorithm::~TraditionalGeneticAlgorithm()
@@ -74,21 +80,23 @@ void TraditionalGeneticAlgorithm::mutate()
 
 void TraditionalGeneticAlgorithm::crossover()
 {
-    // Decide whether to crossover
-    std::uniform_real_distribution<double> probability(0,1);
-    bool doCrossover = (probability(_random_generator) < _crossover_rate);
-    if(! doCrossover)
-    {
-        return;
-    }
+    // // Decide whether to crossover
+    // std::uniform_real_distribution<double> probability(0,1);
+    // bool doCrossover = (probability(_random_generator) < _crossover_rate);
+    // if(! doCrossover)
+    // {
+    //     return;
+    // }
 
     // Make a roulette wheel
     std::vector<double> roulette_wheel;
     roulette_wheel.reserve(_individuals.size());
+    double max_score = *std::max_element(_costs.begin(), _costs.end());
     double total_score = 0.0;
     for (auto c : _costs)
     {
-        total_score += 1.0/c;
+        total_score += -log(c/max_score);
+        // total_score += 1.0/c;
         roulette_wheel.push_back(total_score);
     }
     
@@ -133,6 +141,10 @@ bool TraditionalGeneticAlgorithm::terminate()
 ///
 void TraditionalGeneticAlgorithm::displacementMutation(SolutionBase& s)
 {
+    // You can think of the displacement mutation as 'sliding' a subtour
+    // a number of indices along the original tour. But you can also think 
+    // of it as exchanging two sections. This is what we do here. We exchange
+    // the subtour and what we call the affected region.
     size_t solution_length = s.size();
     std::uniform_int_distribution<size_t> dist_subtour_index(0, solution_length-1);
     size_t subtour_index = dist_subtour_index(_random_generator);

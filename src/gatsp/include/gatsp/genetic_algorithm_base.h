@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <memory>
 #include <random>
+#include <string>
 #include <boost/thread.hpp>
 #include "gatsp/problem_base.h"
 #include "gatsp/solution_base.h"
@@ -34,7 +35,8 @@ public:
 	    int num_individuals, 
 	    double mutate_rate, 
 	    double crossover_rate, 
-	    unsigned int seed
+	    unsigned int seed,
+	    std::string statistics_file
 	);
 
 	GeneticAlgorithmBase(
@@ -43,7 +45,8 @@ public:
 	    int num_individuals, 
 	    double mutate_rate, 
 	    double crossover_rate, 
-	    unsigned int seed
+	    unsigned int seed,
+	    std::string statistics_file
 	);
 
 	GeneticAlgorithmBase(const GeneticAlgorithmBase&);
@@ -59,6 +62,7 @@ public:
 	virtual void step();
 	SolutionBase bestSolution();
 	unsigned int generations() const;
+	void flushStatistics();
 
 private:
 	GeneticAlgorithmBase();
@@ -68,6 +72,9 @@ private:
 	virtual bool terminate() = 0;
 
 	void evaluateIndividuals();
+	void elitism();
+	void createStatistics();
+	void updateStatistics();
 
 protected:
 	const ProblemBase* _problem;
@@ -78,6 +85,9 @@ protected:
 	std::vector<double> _costs;
 	SolutionBase _best_individual;
 	double _best_cost;
+	bool _do_statistics;
+	std::string _statistics_file;
+	std::vector<std::vector<double> > _statistics;
 
 	double _mutate_rate;
 	double _crossover_rate;

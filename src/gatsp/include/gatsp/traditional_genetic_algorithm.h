@@ -27,7 +27,8 @@ public:
         int num_individuals = 100, 
         double mutate_rate = 1.0, 
         double crossover_rate = 1.0,
-        unsigned int seed = 0
+        unsigned int seed = 0,
+        std::string statistics_file = ""
     );
 
     TraditionalGeneticAlgorithm(
@@ -36,7 +37,8 @@ public:
         int num_individuals = 100, 
         double mutate_rate = 1.0, 
         double crossover_rate = 1.0, 
-        unsigned int seed = 0
+        unsigned int seed = 0,
+        std::string statistics_file = ""
     );
     
     virtual ~TraditionalGeneticAlgorithm();

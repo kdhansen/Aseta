@@ -12,6 +12,7 @@
 %}
 
 %include "std_vector.i"
+%include "std_string.i"
 %include "gatsp/point.h"
 %include "gatsp/quaternion.h"
 %include "gatsp/waypoint.h"

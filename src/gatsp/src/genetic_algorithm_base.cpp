@@ -17,6 +17,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <algorithm>
+#include <fstream>
 #include <limits>
 #include "gatsp/genetic_algorithm_base.h"
 
@@ -27,7 +29,8 @@ GeneticAlgorithmBase::GeneticAlgorithmBase(
     int num_individuals = 100,
     double mutate_rate = 1.0,
     double crossover_rate = 0.0,
-    unsigned int seed = 0
+    unsigned int seed = 0,
+    std::string statistics_file = ""
 ) :
     _problem(&problem),
     _num_individuals(num_individuals),
@@ -44,6 +47,13 @@ GeneticAlgorithmBase::GeneticAlgorithmBase(
     	_individuals.push_back(problem.makeSolution());
     }
     evaluateIndividuals();
+    // Create statistics file
+    if (statistics_file != "")
+    {
+        _do_statistics = true;
+        _statistics_file = statistics_file;
+        createStatistics();
+    }
 }
 
 /// Constructor taking a specified problem and a solution to seed the population.
@@ -54,7 +64,8 @@ GeneticAlgorithmBase::GeneticAlgorithmBase(
     int num_individuals = 100,
     double mutate_rate = 1.0,
     double crossover_rate = 0.0,
-    unsigned int seed = 0
+    unsigned int seed = 0,
+    std::string statistics_file = ""
 ) :
     _problem(&problem),
     _num_individuals(num_individuals),
@@ -71,6 +82,13 @@ GeneticAlgorithmBase::GeneticAlgorithmBase(
         _individuals.push_back(solution);
     }
     evaluateIndividuals();
+    // Create statistics file
+    if (statistics_file != "")
+    {
+        _do_statistics = true;
+        _statistics_file = statistics_file;
+        createStatistics();
+    }
 }
 
 /// Copy constructor
@@ -178,13 +196,15 @@ bool GeneticAlgorithmBase::isDone()
 ///
 void GeneticAlgorithmBase::step()
 {
-    // Make babies. (crossover)
+    // Make babies, mutate the babies, and evaluate them.
+    // Plus some statistics.
     crossover();
-    // Mutate the babies.
     mutate();
     evaluateIndividuals();
-    // Count the generation
+    elitism();
+
     _generations += 1;
+    updateStatistics();
     return;
 }
 
@@ -199,6 +219,26 @@ SolutionBase GeneticAlgorithmBase::bestSolution()
 unsigned int GeneticAlgorithmBase::generations() const
 {
     return _generations;
+}
+
+/// Writes the statistics to the file
+///
+void GeneticAlgorithmBase::flushStatistics()
+{
+    std::ofstream myfile;
+    myfile.open(_statistics_file, std::ios::app);
+    for (auto g : _statistics)
+    {
+        std::string seperator("");
+        for (auto c : g)
+        {
+            myfile << seperator << c;
+            seperator = ", ";
+        }
+        myfile << "\n";
+    }
+    _statistics.clear();
+    myfile.close();
 }
 
 /// Evaluate the individuals and update the all-time high.
@@ -218,4 +258,54 @@ void GeneticAlgorithmBase::evaluateIndividuals()
     }
     _costs.swap(new_costs);
     return;
+}
+
+/// Replace worst solution with the best if there was no improvement.
+///
+void GeneticAlgorithmBase::elitism()
+{
+    auto best = std::min_element(_costs.begin(), _costs.end());
+    if (*best > _best_cost)
+    {        
+        double worst_cost = 0;
+        size_t worst_individual;
+        for (size_t i = 0; i < _costs.size(); ++i)
+        {
+            if (_costs[i] > worst_cost)
+            {
+                worst_cost = _costs[i];
+                worst_individual = i;
+            }
+        }
+        _individuals[worst_individual] = _best_individual;
+        evaluateIndividuals();
+    }
+}
+
+/// Create the statistics objects and an empty file to dump it into.
+///
+void GeneticAlgorithmBase::createStatistics()
+{
+    _statistics.reserve(100);
+    std::ofstream myfile;
+    myfile.open(_statistics_file, std::ios::trunc);
+    myfile.close();
+}
+
+/// Notes the costs of the individuals and dumps them into a file once in a while.
+///
+void GeneticAlgorithmBase::updateStatistics()
+{
+    if (!_do_statistics)
+    {
+        return;
+    }
+
+    _statistics.push_back(_costs);
+
+    // Write chunk to file
+    if ((_generations % 100) == 0)
+    {
+        flushStatistics();
+    }
 }
