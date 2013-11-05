@@ -21,6 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cmath>
 #include "gatsp/euclidean_3d_problem.h"
 
+/// Make a quick and feasible solution (but pretty bad probably).
+///
 SolutionBase Euclidean3DProblem::makeSolution() const
 {
     SolutionBase solution;
@@ -28,6 +30,31 @@ SolutionBase Euclidean3DProblem::makeSolution() const
     for(size_t i = 0; i < _waypoints.size(); ++i)
     {
         solution.push_back(i);
+    }
+    return solution;
+}
+
+/// Make a nearest neighbor solution
+///
+SolutionBase Euclidean3DProblem::makeNearestNeighbor() const
+{
+    // Prepare resulting solution
+    SolutionBase solution;
+    solution.reserve(_waypoints.size());
+    // Get the unvisited points
+    SolutionBase unvisited = makeSolution();
+    // Start with the first point.
+    auto from = unvisited.begin();
+    solution.push_back(*from);
+    unvisited.erase(from);
+    while (unvisited.size() > 0)
+    {
+        SolutionEntryBase from = solution.back();
+        auto to = std::min_element(unvisited.begin(), unvisited.end(), 
+            [&](SolutionEntryBase i, SolutionEntryBase j){return euclideanDistance(_waypoints[from.index], _waypoints[i.index]) < euclideanDistance(_waypoints[from.index], _waypoints[j.index]);}
+        );
+        solution.push_back(*to);
+        unvisited.erase(to);
     }
     return solution;
 }
@@ -141,7 +168,7 @@ double Euclidean3DProblem::solutionCost(const SolutionBase& solution) const thro
 
         // Close the loop
         auto from = _waypoints[(solution.end()-1)->index];
-        auto to = _waypoints[0];
+        auto to = _waypoints[(solution.begin())->index];
         dist += euclideanDistance(from, to);
     }
 

@@ -32,7 +32,16 @@ TraditionalGeneticAlgorithm::TraditionalGeneticAlgorithm(
     std::string statistics_file
 ) 
     : GeneticAlgorithmBase(problem, num_individuals, mutate_rate, crossover_rate, seed, statistics_file)
-{}
+{
+    // Shuffle the individuals
+    int i = 0;
+    for (auto& ind : _individuals)
+    {
+        std::shuffle(ind.begin(), ind.end(), _random_generator);
+    }
+    _best_cost = _problem->solutionCost(_individuals[0]);
+    _best_individual = _individuals[0];
+}
 
 TraditionalGeneticAlgorithm::TraditionalGeneticAlgorithm(
     const ProblemBase& problem,
@@ -80,13 +89,13 @@ void TraditionalGeneticAlgorithm::mutate()
 
 void TraditionalGeneticAlgorithm::crossover()
 {
-    // // Decide whether to crossover
-    // std::uniform_real_distribution<double> probability(0,1);
-    // bool doCrossover = (probability(_random_generator) < _crossover_rate);
-    // if(! doCrossover)
-    // {
-    //     return;
-    // }
+    // Decide whether to crossover
+    std::uniform_real_distribution<double> probability(0,1);
+    bool doCrossover = (probability(_random_generator) < _crossover_rate);
+    if(! doCrossover)
+    {
+        return;
+    }
 
     // Make a roulette wheel
     std::vector<double> roulette_wheel;
@@ -105,9 +114,11 @@ void TraditionalGeneticAlgorithm::crossover()
     children.reserve(_individuals.size());
     for (size_t idx_child = 0; idx_child < _individuals.size(); ++idx_child)
     {
+
         std::uniform_real_distribution<double> roulette_ball(0, total_score);
+        // Choose dad
         double ball_value = roulette_ball(_random_generator);
-        size_t idx_parent = 0;
+        size_t idx_dad = 0;
         for (double r : roulette_wheel)
         {
             if (r >= ball_value)
@@ -116,13 +127,34 @@ void TraditionalGeneticAlgorithm::crossover()
             }
             else
             {
-                ++idx_parent;
+                ++idx_dad;
             }
         }
-        SolutionBase s(_individuals[idx_parent]);
-        children.push_back(s);
+        if (probability(_random_generator) < _crossover_rate) // choose to crossover or just copy dad
+        {
+            // Choose mom
+            ball_value = roulette_ball(_random_generator);
+            size_t idx_mom = 0;
+            for (double r : roulette_wheel)
+            {
+                if (r >= ball_value)
+                {
+                    break;
+                }
+                else
+                {
+                    ++idx_mom;
+                }
+            }
+            SolutionBase s = orderCrossover(_individuals[idx_dad], _individuals[idx_mom]);
+            children.push_back(s);
+        }
+        else
+        {            
+            SolutionBase s(_individuals[idx_dad]);
+            children.push_back(s);
+        }
     }
-
     // Swap the children into place
     _individuals.swap(children);
 }
@@ -254,4 +286,47 @@ void TraditionalGeneticAlgorithm::inversionMutation(SolutionBase& s)
         --section_end;
     }
     return;
+}
+
+/// Order crossover. Crosses two parents to an offspring, 
+/// trying to preserve the order of the cities.
+SolutionBase TraditionalGeneticAlgorithm::orderCrossover(const SolutionBase& dad, const SolutionBase& mom)
+{
+    // Create an empty kid
+    SolutionBase kid;
+    size_t solution_length = dad.size();
+    kid.reserve(solution_length);
+    // Choose two cut points
+    std::uniform_int_distribution<size_t> dist(0, solution_length-1);
+    size_t index1 = dist(_random_generator);
+    size_t index2 = dist(_random_generator);
+    while (index1 == index2)
+    {
+        index2 = dist(_random_generator);
+    }
+    if (index1 > index2)
+    {
+        size_t temp = index1;
+        index1 = index2;
+        index2 = temp;
+    }
+    // Create a subtour from mom.
+    SolutionBase subtour(mom.begin()+index1, mom.begin()+index2);
+    // Traverse the dad solution, copying entries != subtour.
+    // and when the time is right, copy the subtour to kid in the
+    // position it was cut.
+    int i = 0;
+    for (const auto& entry : dad)
+    {
+        if ( std::none_of(subtour.begin(), subtour.end(), [&](const SolutionEntryBase& e){return e == entry;}) )
+        {
+            kid.push_back(entry);
+        }
+        if (i == index1)
+        {
+            kid.insert(kid.end(), subtour.begin(), subtour.end());
+        }
+        i += 1;
+    }
+    return kid;
 }

@@ -29,7 +29,6 @@ if(CMAKE_COMPILER_IS_GNUCXX)
    endif()
    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ENABLE_CXX11}")
 endif()
-
 ################################################
 ## Declare ROS messages, services and actions ##
 ################################################

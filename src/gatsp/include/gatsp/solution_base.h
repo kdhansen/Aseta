@@ -32,6 +32,10 @@ struct SolutionEntryBase
     {
         return (index == rhs.index);
     }
+    bool operator!=(const SolutionEntryBase& rhs) const
+    {
+        return (index != rhs.index);
+    }
     size_t index;
 };
 

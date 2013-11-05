@@ -142,7 +142,10 @@ GeneticAlgorithmBase::~GeneticAlgorithmBase()
 /// Should be ideal for threading (using boost::thread).
 void GeneticAlgorithmBase::evolve(unsigned int max_generations)
 {
-    while (! terminate() && ! isRunning() && (_generations < max_generations))
+    _lock.lock();
+    _isRunning = true;
+    _lock.unlock();
+    while (! terminate() && isRunning() && (_generations < max_generations))
     {
         try
         {

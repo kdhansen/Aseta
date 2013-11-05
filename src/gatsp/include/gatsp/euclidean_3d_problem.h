@@ -26,6 +26,7 @@ class Euclidean3DProblem : public ProblemBase
 {
 public:
     virtual SolutionBase makeSolution() const;
+    virtual SolutionBase makeNearestNeighbor() const;
     virtual std::vector<Waypoint> route(const SolutionBase&) throw(InvalidSolution);
     virtual Waypoint firstWaypoint(const SolutionBase&) throw(InvalidSolution);
     virtual void popWaypointFront(SolutionBase&) throw(InvalidSolution);

@@ -53,4 +53,6 @@ private:
     void displacementMutation(SolutionBase&);
     void exchangeMutation(SolutionBase&);
     void inversionMutation(SolutionBase&);
+
+    SolutionBase orderCrossover(const SolutionBase&, const SolutionBase&);
 };
