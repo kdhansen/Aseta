@@ -1,16 +1,12 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(gatsp)
 
-## Find catkin macros and libraries
-## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
-## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
 )
 
-## System dependencies are found with CMake's conventions
-# find_package(Boost REQUIRED COMPONENTS system)
+find_package(Boost REQUIRED COMPONENTS thread)
 
 find_package(SWIG REQUIRED)
 include(${SWIG_USE_FILE})
@@ -99,39 +95,34 @@ catkin_package(
 ###########
 ## Build ##
 ###########
-
-## Specify additional locations of header files
-## Your package locations should be listed before other locations
-# include_directories(include)
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
   ${PYTHON_INCLUDE_DIRS}
+  ${Boost_INCLUDE_DIRS}
 )
 
-# set_source_files_properties(
-#   swig/waypoint.i PROPERTIES CPLUSPLUS ON 
-# )
+# Declare the gatsp library
+add_library(gatsp_lib
+  src/genetic_algorithm.cpp
+  src/waypoint.cpp
+  src/euclidean_3d_problem.cpp
+)
 
-# SWIG_ADD_MODULE(waypoint python
-#   swig/waypoint.i src/waypoint.cpp
-# )
-# SWIG_LINK_LIBRARIES(waypoint ${PYTHON_LIBRARIES})
-# set_target_properties(_waypoint
-#   PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_PYTHON_DESTINATION}
-# )
-# add_custom_command(TARGET _waypoint POST_BUILD
-#                    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/waypoint.py ${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_PYTHON_DESTINATION}/.
-# )
+# Specify libraries to link a library or executable target against
+target_link_libraries(gatsp_lib
+  ${catkin_LIBRARIES}
+  ${Boost_LIBRARIES}
+)
 
+# Python gatsp wrapper using SWIG
 set_source_files_properties(
   swig/gatsp_wrapping.i PROPERTIES CPLUSPLUS ON 
 )
-
 SWIG_ADD_MODULE(gatsp_wrapping python
-  swig/gatsp_wrapping.i src/traditional_genetic_algorithm.cpp src/genetic_algorithm_base.cpp src/euclidean_3d_problem.cpp src/waypoint.cpp
+  swig/gatsp_wrapping.i
 )
-SWIG_LINK_LIBRARIES(gatsp_wrapping ${PYTHON_LIBRARIES} ${catkin_LIBRARIES})
+SWIG_LINK_LIBRARIES(gatsp_wrapping gatsp_lib ${PYTHON_LIBRARIES})
 set_target_properties(_gatsp_wrapping
   PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_PYTHON_DESTINATION}
 )
@@ -139,23 +130,13 @@ add_custom_command(TARGET _gatsp_wrapping POST_BUILD
                    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/gatsp_wrapping.py ${CATKIN_DEVEL_PREFIX}/${CATKIN_PACKAGE_PYTHON_DESTINATION}/.
 )
 
-
-## Declare a cpp library
-# add_library(tsp_lib
-#   src/${PROJECT_NAME}/tsp_lib.cpp
-# )
-
-## Declare a cpp executable
+# # Declare a cpp executable
 # add_executable(tsp_lib_node src/tsp_lib_node.cpp)
 
 ## Add cmake target dependencies of the executable/library
 ## as an example, message headers may need to be generated before nodes
 # add_dependencies(tsp_lib_node tsp_lib_generate_messages_cpp)
 
-## Specify libraries to link a library or executable target against
-# target_link_libraries(tsp_lib_node
-#   ${catkin_LIBRARIES}
-# )
 
 #############
 ## Install ##
@@ -195,6 +176,14 @@ add_custom_command(TARGET _gatsp_wrapping POST_BUILD
 #############
 ## Testing ##
 #############
+
+# A test to enable gdb profiling
+add_executable(test_gdb_gatsp test/src/test_gdb_gatsp.cpp)
+target_link_libraries( test_gdb_gatsp
+  gatsp_lib
+  ${catkin_LIBRARIES}
+  ${Boost_LIBRARIES}
+)
 
 ## Add gtest based cpp test target and link libraries
 # catkin_add_gtest(${PROJECT_NAME}-test test/test_tsp_lib.cpp)

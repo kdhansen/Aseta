@@ -17,30 +17,79 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifndef EUCLIDEAN_3D_PROBLEM_H
-#define EUCLIDEAN_3D_PROBLEM_H
+#ifndef GATSP_EUCLIDEAN_3D_PROBLEM_H
+#define GATSP_EUCLIDEAN_3D_PROBLEM_H
 
-#include "gatsp/problem_base.h"
+#include <random>
+#include <vector>
+#include "gatsp/genetic_algorithm.h"
+#include "gatsp/waypoint.h"
+
+struct Euclidean3DEntry
+{
+    Euclidean3DEntry(size_t i)
+    {
+        index = i;
+        cost = -1;
+    }
+    bool operator==(const Euclidean3DEntry& other) const
+    {
+        return other.index == index;
+    }
+    bool operator<(const Euclidean3DEntry& other) const
+    {
+        return index < other.index;
+    }
+    size_t index;
+    mutable double cost;
+};
+
+struct Euclidean3DSolution : public SolutionBase
+{
+    Euclidean3DSolution() {};
+    Euclidean3DSolution(
+        const std::vector<Euclidean3DEntry>::const_iterator begin, 
+        const std::vector<Euclidean3DEntry>::const_iterator end
+    );
+    virtual ~Euclidean3DSolution() {};
+    virtual Euclidean3DSolution* clone();
+
+    std::vector<Euclidean3DEntry> genome;
+};
 
 class Euclidean3DProblem : public ProblemBase
 {
 public:
-    virtual SolutionBase makeSolution() const;
-    virtual SolutionBase makeNearestNeighbor() const;
-    virtual std::vector<Waypoint> route(const SolutionBase&) throw(InvalidSolution);
-    virtual Waypoint firstWaypoint(const SolutionBase&) throw(InvalidSolution);
-    virtual void popWaypointFront(SolutionBase&) throw(InvalidSolution);
-    virtual void addWaypoint(const Waypoint&);
-    virtual void addWaypoint(const Waypoint&, SolutionBase&);
+    Euclidean3DProblem(unsigned int seed = 0);
+    virtual ~Euclidean3DProblem();
 
-    virtual double solutionCost(const SolutionBase&) const throw(InvalidSolution);
-    virtual bool isSolutionValid(const SolutionBase&) const;
-    virtual bool repairSolution(const SolutionBase&) const;
+    virtual SolutionBase* makeSolution() const;
+    virtual void mutate(SolutionBase* mutatee) const;
+    virtual SolutionBase* crossover(const SolutionBase* dad, const SolutionBase* mom) const;
+    virtual double cost(const SolutionBase* solution) const;
+
+    virtual Euclidean3DSolution* makeNearestNeighbor() const;
+    virtual Euclidean3DSolution* makeTrivialSolution() const;
+    virtual std::vector<Waypoint> route(const SolutionBase*) throw(InvalidSolution);
+    virtual Waypoint firstWaypoint(const SolutionBase*) throw(InvalidSolution);
+    virtual void popWaypointFront(Euclidean3DSolution&) throw(InvalidSolution);
+    virtual void addWaypoint(const Waypoint& waypoint);
+    // virtual void addWaypoint(const Waypoint&, Euclidean3DSolution&);
+
+    virtual bool isSolutionValid(const Euclidean3DSolution&) const;
+    // virtual bool repairSolution(const Euclidean3DSolution&) const;
 
 private:
-    std::vector<Waypoint> _waypoints;
-
     double euclideanDistance(const Waypoint&, const Waypoint&) const;
+
+    void displacementMutation(Euclidean3DSolution* s) const;
+    void exchangeMutation(Euclidean3DSolution* s) const;
+    void inversionMutation(Euclidean3DSolution* s) const;
+
+    Euclidean3DSolution* orderCrossover(const Euclidean3DSolution* dad, const Euclidean3DSolution* mom) const;
+
+    std::vector<Waypoint> _waypoints;
+    mutable std::mt19937 _random_generator;
 };
 
-#endif // EUCLIDEAN_3D_PROBLEM_H
+#endif // GATSP_EUCLIDEAN_3D_PROBLEM_H
