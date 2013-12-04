@@ -25,13 +25,34 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 int main(int argc, char const *argv[])
 {
-    unsigned int generations = 1000;
+    if (argc == 1)
+    {
+        std::cout << "Usage: test_gdb_gatsp generations [dimension [population_size [mutation_rate [crossover_rate]]]]" << std::endl;
+        return 0;
+    }
+    unsigned int generations;
     if (argc >= 2)
         std::istringstream(argv[1]) >> generations;
-    unsigned int dimension = 1000;
+    unsigned int dimension = 100;
     if (argc >= 3)
         std::istringstream(argv[2]) >> dimension;
+    unsigned int population_size = 100;
+    if (argc >= 4)
+        std::istringstream(argv[3]) >> population_size;
+    double mutation_rate = 0.3;
+    if (argc >= 5)
+        std::istringstream(argv[4]) >> mutation_rate;
+    double crossover_rate = 0.9;
+    if (argc >= 6)
+        std::istringstream(argv[5]) >> crossover_rate;
     std::cout << "Running GATSP test program." << std::endl;
+    std::cout << "Generations: " << generations << std::endl;
+    std::cout << "Dimension: " << dimension << std::endl;
+    std::cout << "Population Size: " << population_size << std::endl;
+    std::cout << "Mutation Rate: " << mutation_rate << std::endl;
+    std::cout << "Crossover Rate: " << crossover_rate << std::endl;
+    std::cout << "---" << std::endl;
+
 
     int seed = 0;
     // Make a set of waypoints and load them into a problem
@@ -48,7 +69,7 @@ int main(int argc, char const *argv[])
     }
 
     // Create a genetic algorithm
-    GeneticAlgorithm ga(prob, 100, 0.3, 0.9, seed, "");
+    GeneticAlgorithm ga(prob, population_size, mutation_rate, crossover_rate, seed, "");
 
     // Evolve and time it
     std::chrono::high_resolution_clock::time_point t1 = std::chrono::high_resolution_clock::now();
