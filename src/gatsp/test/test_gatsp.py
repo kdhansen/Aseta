@@ -20,7 +20,7 @@ p4.addWaypoint(wp2)
 p4.addWaypoint(wp3)
 p4.addWaypoint(wp4)
 s4 = p4.makeSolution()
-print 'Cost should be 4. It is ' +str(p4.cost(s4))
+print 'Cost should be 4. It is ' + str(p4.cost(s4))
 
 print '----'
 print 'Running a GA on berlin52'
@@ -32,7 +32,13 @@ num_individuals = 100
 mutate_rate = 0.3
 crossover_rate = 0.9
 seed = 4
-ga = gatsp.GeneticAlgorithm(prob, num_individuals, mutate_rate, crossover_rate, seed, "stat_file")
+ga = gatsp.GeneticAlgorithm(
+    prob,
+    num_individuals,
+    mutate_rate,
+    crossover_rate,
+    seed,
+    "stat_file")
 berlin_generations = 5000
 start_berlin = time.clock()
 ga.evolve(berlin_generations)
@@ -41,24 +47,24 @@ print 'Generations pr. second: ' + str(berlin_generations/berlin_duration)
 sol = ga.bestSolution()
 route = prob.route(sol)
 coords = np.zeros((len(route), 2))
-for i,wp in enumerate(route):
+for i, wp in enumerate(route):
     coords[i, :] = np.array([wp.x(), wp.y()])
 
 # Plot the results
 set2 = brewer2mpl.get_map('Set2', 'qualitative', 8).mpl_colors
 fig_berlin = plt.figure()
 ax_route = fig_berlin.add_subplot(211)
-ax_route.plot(coords[:,0], coords[:,1], ':o', color=set2[0])
+ax_route.plot(coords[:, 0], coords[:, 1], ':o', color=set2[0])
 ax_route.set_aspect('equal')
 
 stat_max = []
 stat_min = []
 stats = []
-stats_i =[]
+stats_i = []
 ga.flushStatistics()
 with open('stat_file', 'r') as csvfile:
     statreader = csv.reader(csvfile, delimiter=',')
-    for i,row in enumerate(statreader):
+    for i, row in enumerate(statreader):
         numbers = [float(x) for x in row]
         stat_max.append(max(numbers))
         stat_min.append(min(numbers))
@@ -70,6 +76,35 @@ ax_stats.set_color_cycle(set2)
 ax_stats.plot(stats_i, stats, '.', markersize=5, color=set2[2])
 ax_stats.plot(stat_min)
 ax_stats.plot(stat_max)
+
+print '----'
+print 'Running a refueling problem GA on berlin52'
+# Create a TSP from file
+prob = gatsp.RefuelingProblem()
+gatsp.read_tsp('/home/kdh/tsplib95/berlin52.tsp', prob)
+# Run a GA
+num_individuals = 100
+mutate_rate = 0.3
+crossover_rate = 0.9
+seed = 4
+ga = gatsp.GeneticAlgorithm(
+    prob,
+    num_individuals,
+    mutate_rate,
+    crossover_rate,
+    seed,
+    "stat_file")
+berlin_generations = 5000
+start_berlin = time.clock()
+ga.evolve(berlin_generations)
+berlin_duration = time.clock() - start_berlin
+print 'Generations pr. second: ' + str(berlin_generations/berlin_duration)
+sol = ga.bestSolution()
+route = prob.route(sol)
+coords = np.zeros((len(route), 2))
+for i, wp in enumerate(route):
+    coords[i, :] = np.array([wp.x(), wp.y()])
+print 'Done!'
 
 # print '----'
 # print 'Running a GA on d1655'

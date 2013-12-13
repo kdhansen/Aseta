@@ -21,24 +21,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cmath>
 #include "gatsp/euclidean_3d_problem.h"
 
-// SOLUTION
-
-Euclidean3DSolution::Euclidean3DSolution(
-    std::vector<Euclidean3DEntry>::const_iterator begin, 
-    std::vector<Euclidean3DEntry>::const_iterator end
-) :
-    genome(begin, end)
-{}
-
-Euclidean3DSolution* Euclidean3DSolution::clone()
-{
-    Euclidean3DSolution* clone = new Euclidean3DSolution;
-    clone->genome = this->genome;
-    return clone;
-}
-
-
-// PROBLEM
 
 Euclidean3DProblem::Euclidean3DProblem(unsigned int seed) :
     _random_generator(std::mt19937(seed))

@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <iostream>
 #include <fstream>
 #include "gatsp/genetic_algorithm.h"
+#include "gatsp/refueling_problem.h"
 
 /// Constructor
 ///
@@ -48,7 +49,9 @@ GeneticAlgorithm::GeneticAlgorithm(
     _mutate_rate(mutate_rate),
     _crossover_rate(crossover_rate),
     _random_generator(std::mt19937(seed)),
-    _best_cost(std::numeric_limits<double>::infinity())
+    _best_cost(std::numeric_limits<double>::infinity()),
+    _isRunning(false),
+    _isDone(false)
 {
     // Generate the population.
     _population.individuals.reserve(_num_individuals);

@@ -104,9 +104,10 @@ include_directories(
 
 # Declare the gatsp library
 add_library(gatsp_lib
-  src/genetic_algorithm.cpp
-  src/waypoint.cpp
-  src/euclidean_3d_problem.cpp
+  src/gatsp/genetic_algorithm.cpp
+  src/gatsp/waypoint.cpp
+  src/gatsp/euclidean_3d_problem.cpp
+  src/gatsp/refueling_problem.cpp
 )
 
 # Specify libraries to link a library or executable target against
@@ -180,6 +181,14 @@ add_custom_command(TARGET _gatsp_wrapping POST_BUILD
 # A test to enable gdb profiling
 add_executable(test_gdb_gatsp test/src/test_gdb_gatsp.cpp)
 target_link_libraries( test_gdb_gatsp
+  gatsp_lib
+  ${catkin_LIBRARIES}
+  ${Boost_LIBRARIES}
+)
+
+# Debugging the refueling problem
+add_executable(test_gdb_refueling test/src/test_gdb_refueling.cpp)
+target_link_libraries( test_gdb_refueling
   gatsp_lib
   ${catkin_LIBRARIES}
   ${Boost_LIBRARIES}

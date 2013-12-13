@@ -1,5 +1,5 @@
 /*
-Test to enable GDB profiling of GTASP.
+Test to enable GDB profiling of the refueling problem.
 Copyright (C) 2013 Karl D. Hansen (kdh@es.aau.dk)
 
 This program is free software: you can redistribute it and/or modify
@@ -21,13 +21,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <memory>
 #include <random>
 #include <sstream>
-#include "gatsp/euclidean_3d_problem.h"
+#include "gatsp/refueling_problem.h"
 
 int main(int argc, char const *argv[])
 {
     if (argc == 1)
     {
-        std::cout << "Usage: test_gdb_gatsp generations [dimension [population_size [mutation_rate [crossover_rate]]]]" << std::endl;
+        std::cout << "Usage: test_gdb_refueling generations [dimension [population_size [mutation_rate [crossover_rate]]]]" << std::endl;
         return 0;
     }
     unsigned int generations;
@@ -58,14 +58,22 @@ int main(int argc, char const *argv[])
     // Make a set of waypoints and load them into a problem
     std::default_random_engine generator;
     std::uniform_real_distribution<double> distribution(0.0, 10.0);
-    Euclidean3DProblem prob(seed);
-    for (size_t i = 0; i < dimension; ++i)
+    RefuelingProblem prob(seed);
+    for (size_t i = 0; i < dimension-2; ++i)
     {
         double x = distribution(generator);
         double y = distribution(generator);
         double z = distribution(generator);
         Waypoint wp(Point(x, y, z), Quaternion());
         prob.addWaypoint(wp);
+    }
+    for (size_t i = 0; i < 2; ++i)
+    {
+        double x = distribution(generator);
+        double y = distribution(generator);
+        double z = distribution(generator);
+        Waypoint wp(Point(x, y, z), Quaternion());
+        prob.addDepot(wp);
     }
 
     // Create a genetic algorithm

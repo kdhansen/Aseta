@@ -6,6 +6,7 @@
 #include "gatsp/quaternion.h"
 #include "gatsp/waypoint.h"
 #include "gatsp/euclidean_3d_problem.h"
+#include "gatsp/refueling_problem.h"
 %}
 
 %include "std_vector.i"
@@ -25,3 +26,8 @@
 %newobject Euclidean3DProblem::makeSolution();
 %newobject Euclidean3DProblem::crossover();
 %include "gatsp/euclidean_3d_problem.h"
+
+%newobject RefuelingProblem::makeSolution();
+%newobject RefuelingProblem::crossover();
+%include "gatsp/refueling_problem.h"
+%template(DoubleVector) std::vector<double>;

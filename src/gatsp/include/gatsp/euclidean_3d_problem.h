@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <random>
 #include <vector>
 #include "gatsp/genetic_algorithm.h"
+#include "gatsp/path_representation.h"
 #include "gatsp/waypoint.h"
 
 struct Euclidean3DEntry
@@ -44,18 +45,7 @@ struct Euclidean3DEntry
     mutable double cost;
 };
 
-struct Euclidean3DSolution : public SolutionBase
-{
-    Euclidean3DSolution() {};
-    Euclidean3DSolution(
-        const std::vector<Euclidean3DEntry>::const_iterator begin, 
-        const std::vector<Euclidean3DEntry>::const_iterator end
-    );
-    virtual ~Euclidean3DSolution() {};
-    virtual Euclidean3DSolution* clone();
-
-    std::vector<Euclidean3DEntry> genome;
-};
+typedef PathSolution<Euclidean3DEntry> Euclidean3DSolution;
 
 class Euclidean3DProblem : public ProblemBase
 {
@@ -79,7 +69,7 @@ public:
     virtual bool isSolutionValid(const Euclidean3DSolution&) const;
     // virtual bool repairSolution(const Euclidean3DSolution&) const;
 
-private:
+protected:
     double euclideanDistance(const Waypoint&, const Waypoint&) const;
 
     void displacementMutation(Euclidean3DSolution* s) const;
