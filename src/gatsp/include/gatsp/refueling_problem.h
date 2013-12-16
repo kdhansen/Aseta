@@ -50,6 +50,7 @@ class RefuelingProblem : public ProblemBase
 {
 public:
     RefuelingProblem(unsigned int seed = 0);
+    RefuelingProblem(const Waypoint& initialDepot, unsigned int seed = 0);
     virtual ~RefuelingProblem();
 
     virtual void addWaypoint(const Waypoint& waypoint);
@@ -70,6 +71,8 @@ private:
     std::vector<Waypoint> _waypoints;
     std::vector<bool> _isDepot;
     std::vector<size_t> _depotIndices;
+    RefuelingSolution _leadIn;
+    RefuelingSolution _leadOut;
     double _metersPrTank;
 
     double euclideanDistance(const Waypoint& from, const Waypoint& to) const;

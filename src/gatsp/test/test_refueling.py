@@ -43,7 +43,6 @@ print '----'
 print 'Running a small refueling problem'
 # Create a TSP
 print 'Creating problem'
-prob = gatsp.RefuelingProblem()
 # wps = np.array([[4.3, 9.5],
 #                 [3.5, 2.4],
 #                 [7.4, 8.2],
@@ -65,11 +64,14 @@ prob = gatsp.RefuelingProblem()
 wps = np.random.random((20, 2)) * 10
 deps = np.array([[5.7, 6.3],
                  [6.2, 9.4]])
+p = gatsp.Point(deps[0][0], deps[0][1], 0)
+q = gatsp.Quaternion()
+prob = gatsp.RefuelingProblem(gatsp.Waypoint(p, q))
 for wp in wps:
     p = gatsp.Point(wp[0], wp[1], 0)
     q = gatsp.Quaternion()
     prob.addWaypoint(gatsp.Waypoint(p, q))
-for dp in deps:
+for dp in deps[1:]:
     p = gatsp.Point(dp[0], dp[1], 0)
     q = gatsp.Quaternion()
     prob.addDepot(gatsp.Waypoint(p, q))

@@ -20,10 +20,31 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "gatsp/refueling_problem.h"
 
+/// Constructor
+///
+/// @param seed Seed for the random engine.
 RefuelingProblem::RefuelingProblem(unsigned int seed) :
     _random_generator(std::mt19937(seed))
-{}
+{
+    addDepot(Waypoint()); // start in {0,0,0}.
+    _leadIn.genome.push_back(0); // lead in and out is simply a point.
+    _leadOut.genome.push_back(0);
+}
 
+/// Constructor
+///
+/// @param initialDepot The depot where the helicopter starts and stops.
+/// @param seed Seed for the random engine.
+RefuelingProblem::RefuelingProblem(const Waypoint& initialDepot, unsigned int seed) :
+    _random_generator(std::mt19937(seed))
+{
+    addDepot(initialDepot);
+    _leadIn.genome.push_back(0);
+    _leadOut.genome.push_back(0);
+}
+
+/// Destructor
+///
 RefuelingProblem::~RefuelingProblem()
 {}
 
@@ -233,9 +254,20 @@ double RefuelingProblem::cost(const SolutionBase* solution) const
 
     double dist = 0.0;
     double maxFuel = 0.0; // find which entry that has the most fuelLeft.
-    if (2 <= sol->genome.size()) // Cannot compute distance between less than two wps.
+    if (1 <= sol->genome.size()) // Cannot compute the cost unless there is a waypoint to go to.
     {
         // Euclidean distance
+        // First, from the set out.
+        auto first_wp = sol->genome.begin();
+        if (first_wp->cost < 0.0)
+        {
+            double d = euclideanDistance(_waypoints[(_leadIn.genome.end() - 1)->index], _waypoints[first_wp->index]);
+            first_wp->cost = d;
+            dist += d;
+        }
+        else
+            dist += first_wp->cost;
+
         // Traverse the solution
         for (auto entry = sol->genome.begin()+1; entry != sol->genome.end(); ++entry)
         {
@@ -251,46 +283,47 @@ double RefuelingProblem::cost(const SolutionBase* solution) const
         }
 
         // Close the loop
-        auto from = sol->genome.rbegin();
-        auto to = sol->genome.begin();
-        if (to->cost < 0.0)
+        auto last_wp = sol->genome.end() - 1;
+        if (_leadOut.genome.begin()->cost < 0.0)
         {
-            double d = euclideanDistance(_waypoints[from->index], _waypoints[to->index]);
-            to->cost = d;
+            double d = euclideanDistance(_waypoints[last_wp->index], _waypoints[_leadOut.genome.begin()->index]);
+            _leadOut.genome.begin()->cost = d;
             dist += d;
         }
         else
-            dist += to->cost;
+            dist += _leadOut.genome.begin()->cost;
 
         // Fuel usage
         // compute usage for each leg
         // cummulate fuel used between depots and set refuel amount
-        auto last_depot = sol->genome.begin();
+        auto lastDepot = _leadIn.genome.end() - 1;
         double fuelUsed = 0.0;
-        for (auto entry = sol->genome.begin() + 1; entry != sol->genome.end(); ++entry)
+        for (auto entry = sol->genome.begin(); entry != sol->genome.end(); ++entry)
         {
             fuelUsed += entry->cost;
             if (_isDepot[entry->index])
             {
-                last_depot->fuelLeft = fuelUsed;
+                lastDepot->fuelLeft = fuelUsed;
                 if (fuelUsed > maxFuel)
                     maxFuel = fuelUsed;
                 fuelUsed = 0.0;
-                last_depot = entry;
+                lastDepot = entry;
             }
-            if (entry == sol->genome.end()-1) // we should count the first entry and refuel
+            if (entry == sol->genome.end()-1) // we should count the final entry and refuel
             {
-                fuelUsed += sol->genome.begin()->cost;
-                last_depot->fuelLeft = fuelUsed;
+                fuelUsed += _leadOut.genome.begin()->cost;
+                lastDepot->fuelLeft = fuelUsed;
                 if (fuelUsed > maxFuel)
                     maxFuel = fuelUsed;
             }
         }
         // do another run to compute the fuel left
+        auto previousEntry = _leadIn.genome.end() - 1;
         for (auto entry = sol->genome.begin() + 1; entry != sol->genome.end(); ++entry)
         {
             if (! _isDepot[entry->index])
-                entry->fuelLeft = (entry - 1)->fuelLeft - entry->cost;
+                entry->fuelLeft = previousEntry->fuelLeft - entry->cost;
+            previousEntry = entry;
         }
     }
 
@@ -373,10 +406,18 @@ std::vector<Waypoint> RefuelingProblem::route(const SolutionBase* solution) thro
         throw InvalidSolution("Solution not RefuelingSolution.");
 
     std::vector<Waypoint> output;
-    output.reserve(_waypoints.size());
+    output.reserve(_leadIn.genome.size() + ref_solution->genome.size() + _leadOut.genome.size());
+    for (const auto& leadIn_entry : _leadIn.genome)
+    {
+        output.push_back(_waypoints[leadIn_entry.index]);
+    }
     for (const auto& sol_entry : ref_solution->genome)
     {
         output.push_back(_waypoints[sol_entry.index]);
+    }
+    for (const auto& leadOut_entry : _leadOut.genome)
+    {
+        output.push_back(_waypoints[leadOut_entry.index]);
     }
     return output;
 }
@@ -392,10 +433,18 @@ std::vector<double> RefuelingProblem::fuelLeft(const SolutionBase* solution) thr
         throw InvalidSolution("Solution not RefuelingSolution.");
 
     std::vector<double> output;
-    output.reserve(_waypoints.size());
+    output.reserve(_leadIn.genome.size() + ref_solution->genome.size() + _leadOut.genome.size());
+    for (const auto& leadIn_entry : _leadIn.genome)
+    {
+        output.push_back(leadIn_entry.fuelLeft);
+    }
     for (const auto& sol_entry : ref_solution->genome)
     {
         output.push_back(sol_entry.fuelLeft);
+    }
+    for (const auto& leadOut_entry : _leadOut.genome)
+    {
+        output.push_back(leadOut_entry.fuelLeft);
     }
     return output;
 }
